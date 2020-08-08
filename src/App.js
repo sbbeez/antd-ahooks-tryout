@@ -1,6 +1,15 @@
+/**
+ * title: Form and Table data binding
+ * desc: useAntdTable returns a search object after receiving a form instance.
+ *
+ * title.zh-CN: Form 与 Table 联动
+ * desc.zh-CN: useAntdTable 接收 form 实例后，会返回 search 对象。
+ */
+
 import React from "react";
 import { Button, Col, Form, Input, Row, Table, Select } from "antd";
 import { useAntdTable } from "ahooks";
+import { PaginatedParams } from "ahooks/lib/useAntdTable";
 
 const { Option } = Select;
 
@@ -11,6 +20,7 @@ const getTableData = ({ current, pageSize }, formData) => {
       query += `&${key}=${value}`;
     }
   });
+
   return fetch(`https://randomuser.me/api?results=55&${query}`)
     .then(res => res.json())
     .then(res => ({
@@ -19,14 +29,16 @@ const getTableData = ({ current, pageSize }, formData) => {
     }));
 };
 
-const AppList = props => {
-  const { getFieldDecorator } = props.form;
-  const { tableProps, search, loading } = useAntdTable(getTableData, {
+export default () => {
+  const [form] = Form.useForm();
+
+  const { tableProps, search } = useAntdTable(getTableData, {
     defaultPageSize: 5,
-    form: props.form
+    form
   });
-  console.log("loading", loading);
+
   const { type, changeType, submit, reset } = search;
+
   const columns = [
     {
       title: "name",
@@ -45,42 +57,33 @@ const AppList = props => {
       dataIndex: "gender"
     }
   ];
+
   const advanceSearchForm = (
     <div>
-      <Form>
+      <Form form={form}>
         <Row gutter={24}>
           <Col span={8}>
-            <Form.Item label="name">
-              {getFieldDecorator("name")(<Input placeholder="name" />)}
+            <Form.Item label="name" name="name">
+              <Input placeholder="name" />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="email">
-              {getFieldDecorator("email")(<Input placeholder="email" />)}
+            <Form.Item label="email" name="email">
+              <Input placeholder="email" />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="phone">
-              {getFieldDecorator("phone")(<Input placeholder="phone" />)}
+            <Form.Item label="phone" name="phone">
+              <Input placeholder="phone" />
             </Form.Item>
           </Col>
         </Row>
         <Row>
-          <Form.Item
-            style={{
-              display: "flex",
-              justifyContent: "flex-end"
-            }}
-          >
+          <Form.Item style={{ display: "flex", justifyContent: "flex-end" }}>
             <Button type="primary" onClick={submit}>
               Search
             </Button>
-            <Button
-              onClick={reset}
-              style={{
-                marginLeft: 16
-              }}
-            >
+            <Button onClick={reset} style={{ marginLeft: 16 }}>
               Reset
             </Button>
             <Button type="link" onClick={changeType}>
@@ -91,54 +94,35 @@ const AppList = props => {
       </Form>
     </div>
   );
-  const searchForm = (
-    <div
-      style={{
-        marginBottom: 16
-      }}
-    >
-      <Form
-        style={{
-          display: "flex",
-          justifyContent: "flex-end"
-        }}
-      >
-        {getFieldDecorator("gender", {
-          initialValue: "male"
-        })(
-          <Select
-            style={{
-              width: 120,
-              marginRight: 16
-            }}
-            onChange={submit}
-          >
+
+  const searchFrom = (
+    <div style={{ marginBottom: 16 }}>
+      <Form form={form} style={{ display: "flex", justifyContent: "flex-end" }}>
+        <Form.Item name="gender">
+          <Select style={{ width: 120, marginRight: 16 }} onChange={submit}>
             <Option value="">all</Option>
             <Option value="male">male</Option>
             <Option value="female">female</Option>
           </Select>
-        )}
-        {getFieldDecorator("name")(
+        </Form.Item>
+        <Form.Item name="name">
           <Input.Search
             placeholder="enter name"
-            style={{
-              width: 240
-            }}
+            style={{ width: 240 }}
             onSearch={submit}
           />
-        )}
+        </Form.Item>
         <Button type="link" onClick={changeType}>
           Advanced Search
         </Button>
       </Form>
     </div>
   );
+
   return (
     <div>
-      {type === "simple" ? searchForm : advanceSearchForm}
+      {type === "simple" ? searchFrom : advanceSearchForm}
       <Table columns={columns} rowKey="email" {...tableProps} />
     </div>
   );
 };
-
-export default Form.create()(AppList);
